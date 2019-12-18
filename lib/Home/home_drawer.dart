@@ -69,6 +69,5 @@ class HomeDrawer extends StatelessWidget {
         ],
       ),
     );
-
   }
 }

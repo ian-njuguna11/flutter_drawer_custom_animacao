@@ -111,13 +111,13 @@ class HomeDrawerItem extends StatelessWidget {
             builder: (BuildContext context, Widget child) {
               return Transform(
                 transform: Matrix4.translationValues(
-                    (MediaQuery.of(context).size.width * 0.75 - 64) * (1.0 - animacaoItemController.value - 1.0),
+                    (MediaQuery.of(context).size.width * 0.75 - 100) * (1.0 - animacaoItemController.value - 1.0),
                     0.0,
                     0.0),
                 child: Padding(
                   padding: EdgeInsets.only(top: 8, bottom: 8),
                   child: Container(
-                    width: MediaQuery.of(context).size.width * 0.75 - 64,
+                    width: MediaQuery.of(context).size.width * 0.75 - 100,
                     height: 46,
                     decoration: BoxDecoration(
                       color: Colors.blue.withOpacity(0.2),

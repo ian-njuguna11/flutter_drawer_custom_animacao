@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -12,7 +13,7 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   MenuIndex menuIndex;
-  double menuLargura = 300;
+  double menuLargura = 230;
   bool menuAberto = false;
 
   ScrollController drawerScrollController;
@@ -21,46 +22,15 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   @override
   void initState() {
     menuIndex = MenuIndex.Home;
-    inicializaDrawer();
+    _inicializaDrawer();
     super.initState();
   }
 
-  void inicializaDrawer() async {
-    animacaoItemController = AnimationController(vsync: this, duration: Duration(milliseconds: 0));
-    animacaoItemController.animateTo(1.0, duration: Duration(milliseconds: 0), curve: Curves.fastOutSlowIn);
-
-    drawerScrollController = ScrollController(initialScrollOffset: menuLargura);
-    drawerScrollController
-      ..addListener(() {
-        if (drawerScrollController.offset <= 0) {
-          if (!menuAberto) {
-            setState(() {
-              menuAberto = true;
-
-              // MENU ESTÁ ABERTO
-            });
-          }
-
-          animacaoItemController.animateTo(0.0, duration: Duration(milliseconds: 0), curve: Curves.linear);
-        } else if (drawerScrollController.offset > 0 && drawerScrollController.offset < menuLargura) {
-          animacaoItemController.animateTo((drawerScrollController.offset * 100 / (menuLargura)) / 100,
-              duration: Duration(milliseconds: 0), curve: Curves.linear);
-        } else if (drawerScrollController.offset <= menuLargura) {
-          if (menuAberto) {
-            setState(() {
-              menuAberto = false;
-
-              // MENU ESTÁ FECHADO
-            });
-          }
-          animacaoItemController.animateTo(1.0, duration: Duration(milliseconds: 0), curve: Curves.linear);
-        }
-      });
-
-    await Future<dynamic>.delayed(Duration(milliseconds: 400));
-    // Fecha o drawer posicionando o scroll no início da área da home
-    drawerScrollController.jumpTo(menuLargura);
-    setState(() {});
+  @override
+  void dispose() {
+    drawerScrollController.dispose();
+    animacaoItemController.dispose();
+    super.dispose();
   }
 
   @override
@@ -106,8 +76,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               menuIndex: menuIndex,
               animacaoItemController: animacaoItemController,
               functionCallBack: (MenuIndex menuIndex) {
-                drawerAnimacaoClick();
-                functionCallBack(menuIndex);
+                _drawerAnimacaoClick();
+                _functionCallBack(menuIndex);
               },
             ),
           ),
@@ -124,6 +94,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         color: RechTheme.white,
         child: Stack(
           children: <Widget>[
+            _bodyContent(),
             fechaDrawerClick(),
             iconeHomeAnimacao(),
           ],
@@ -132,7 +103,163 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     );
   }
 
-  void drawerAnimacaoClick() {
+  Widget _bodyContent() {
+    return Padding(
+      padding: EdgeInsets.only(top: MediaQuery.of(context).padding.top),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          appBar(),
+          Expanded(
+            child: Container(
+              color: Colors.red,
+            ),
+          )
+        ],
+      ),
+    );
+  }
+
+  Widget appBar() {
+    return SizedBox(
+      height: AppBar().preferredSize.height,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: <Widget>[
+          Padding(
+            padding: const EdgeInsets.only(top: 8, left: 8),
+            child: Container(
+              width: AppBar().preferredSize.height - 8,
+              height: AppBar().preferredSize.height - 8,
+            ),
+          ),
+          Expanded(
+            child: Center(
+              child: Padding(
+                padding: const EdgeInsets.only(top: 7),
+                child: Text(
+                  'Teste',
+                  style: TextStyle(
+                    fontSize: 22,
+                    color: RechTheme.darkText,
+                  ),
+                ),
+              ),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.only(top: 8, right: 8),
+            child: Container(
+              width: AppBar().preferredSize.height - 8,
+              height: AppBar().preferredSize.height - 8,
+              color: Colors.white,
+              child: Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(AppBar().preferredSize.height),
+                  child: Icon(
+                    Icons.dashboard,
+                    color: RechTheme.dark_grey,
+                  ),
+                  onTap: () {
+                    setState(() {});
+                  },
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget fechaDrawerClick() {
+    return menuAberto
+        ? InkWell(
+            onTap: () {
+              _drawerAnimacaoClick();
+            },
+          )
+        : SizedBox();
+  }
+
+  Widget iconeHomeAnimacao() {
+    return Padding(
+      padding: EdgeInsets.only(top: MediaQuery.of(context).padding.top + 8, left: 8),
+      child: SizedBox(
+        width: AppBar().preferredSize.height - 8,
+        height: AppBar().preferredSize.height - 8,
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            borderRadius: BorderRadius.circular(AppBar().preferredSize.height),
+            child: Center(
+              child: AnimatedIcon(icon: AnimatedIcons.arrow_menu, progress: animacaoItemController),
+            ),
+            onTap: () {
+              FocusScope.of(context).requestFocus(FocusNode());
+              _drawerAnimacaoClick();
+            },
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _inicializaDrawer() async {
+    animacaoItemController = AnimationController(vsync: this, duration: Duration(milliseconds: 0));
+    animacaoItemController.animateTo(1.0, duration: Duration(milliseconds: 0), curve: Curves.fastOutSlowIn);
+
+    drawerScrollController = ScrollController(initialScrollOffset: menuLargura);
+    drawerScrollController.addListener(() {
+      // Se o drawer está aberto
+      if (drawerScrollController.offset <= 0) {
+        _drawerScrollListnerAberto();
+        return;
+      }
+
+      // Se o drawer está em movimento (efeito em execução)
+      if (drawerScrollController.offset > 0 && drawerScrollController.offset < menuLargura) {
+        _drawerScrollListnerMovimento();
+        return;
+      }
+
+      // Se o drawer está fechado
+      if (drawerScrollController.offset <= menuLargura) {
+        _drawerScrollListnerFechado();
+      }
+    });
+
+    await Future<dynamic>.delayed(Duration(milliseconds: 400));
+    // Fecha o drawer posicionando o scroll no início da área da home
+    drawerScrollController.jumpTo(menuLargura);
+    setState(() {});
+  }
+
+  void _drawerScrollListnerAberto() {
+    if (!menuAberto) {
+      setState(() {
+        menuAberto = true;
+      });
+    }
+    animacaoItemController.animateTo(0.0, duration: Duration(milliseconds: 0), curve: Curves.linear);
+  }
+
+  void _drawerScrollListnerMovimento() {
+    animacaoItemController.animateTo((drawerScrollController.offset * 100 / (menuLargura)) / 100,
+        duration: Duration(milliseconds: 0), curve: Curves.linear);
+  }
+
+  void _drawerScrollListnerFechado() {
+    if (menuAberto) {
+      setState(() {
+        menuAberto = false;
+      });
+    }
+    animacaoItemController.animateTo(1.0, duration: Duration(milliseconds: 0), curve: Curves.linear);
+  }
+
+  void _drawerAnimacaoClick() {
     if (drawerScrollController.offset != 0.0) {
       drawerScrollController.animateTo(
         0.0,
@@ -148,7 +275,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     }
   }
 
-  functionCallBack(MenuIndex menuIndexSelecionado) async {
+  void _functionCallBack(MenuIndex menuIndexSelecionado) async {
     // Se trocou de opção do menu
     if (menuIndex != menuIndexSelecionado) {
       setState(() {
@@ -172,43 +299,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         }
       });
     }
-  }
-
-  /*
-  * Função responsável por fechar o drawer ao se clicar no body
-  *
-  * */
-  Widget fechaDrawerClick() {
-    return menuAberto
-        ? InkWell(
-            onTap: () {
-              drawerAnimacaoClick();
-            },
-          )
-        : SizedBox();
-  }
-
-  Widget iconeHomeAnimacao() {
-    return Padding(
-      padding: EdgeInsets.only(top: MediaQuery.of(context).padding.top + 8, left: 8),
-      child: SizedBox(
-        width: AppBar().preferredSize.height - 8,
-        height: AppBar().preferredSize.height - 8,
-        child: Material(
-          color: Colors.transparent,
-          child: InkWell(
-            borderRadius: BorderRadius.circular(AppBar().preferredSize.height),
-            child: Center(
-              child: AnimatedIcon(icon: AnimatedIcons.arrow_menu, progress: animacaoItemController),
-            ),
-            onTap: () {
-              FocusScope.of(context).requestFocus(FocusNode());
-              drawerAnimacaoClick();
-            },
-          ),
-        ),
-      ),
-    );
   }
 
   Future<bool> _sairApp(BuildContext context) {
